@@ -1,35 +1,47 @@
-import Fetch from './fetchData.js';
-
-
 const ctx = document.getElementById('myChart').getContext('2d');
 const GLOBAL_MIN_TENPERATURE = 14;
 
 
-Fetch().then((parseData) => {
-    const mapaData = parseData.reduce((acc, entry) => {
-        acc.years.push(entry.Year);
-        acc.temps.push(Number(entry.Glob) + GLOBAL_MIN_TENPERATURE);
+fetchData().then(parseData).then(getLabelsAndData).then(({years, temps})=> drawChart(years, temps));
 
-        return acc;
-    }, { years:[], temps:[]})
+function fetchData() {
+    return fetch("../ZonAnn.Ts+dSST.csv").then(res => res.text());
+};
 
-new Chart(ctx, {
+function parseData(data) {
+    return Papa.parse(data, { header: true }).data;
+};
+
+function getLabelsAndData(data) {
+    return data.reduce(
+                (acc, entry) => {
+                    acc.years.push(entry.Year);
+                    acc.temps.push(Number(entry.Glob) + GLOBAL_MIN_TENPERATURE);
+
+                    return acc;
+                },
+                { years: [], temps: [] }
+            );
+};
+
+function drawChart(labels, data) {
+        new Chart(ctx, {
     type: 'line',
     data: {
-        labels: years,
+        labels,
         datasets: [{
             label: 'Средняя температура планеты',
-            data: temps,
-            backgroundColor:'rgba(255, 99, 132, 0.2)',
-            borderColor:'rgba(255, 99, 132, 1)',
+            data,
+            backgroundColor:'blue',
+            borderColor:'blue',
             borderWidth: 1,
             fill: false,
         }]
     },
     options: {
         scales: {
-            y: {
-                ticsk: {
+            yAxes: {
+                ticks: {
                     callback(value) {
                         return value + "$";
                     }
@@ -38,6 +50,15 @@ new Chart(ctx, {
         }
     }
 });
+}
+        
 
-    
-})
+
+
+
+
+
+           
+
+
+        
